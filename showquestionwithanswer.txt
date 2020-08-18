@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Answers;
+use App\Questions;
+use Illuminate\Support\Facades\DB;
+class AnswerController extends Controller
+{
+    public function index(Request $request)
+    {
+        //$answer = Answers::get();
+        $questions=DB::table('questions')->get();
+        $i=0;
+        foreach($questions as $qu){
+            $data=DB::table('answers')
+            ->where('q_id','=',$qu->id)->get();
+            $questions[$i]->answers=$data;
+            $i++;
+        }
+      /*  $data=DB::table('answers')
+        ->join('questions','answers.q_id','questions.id')
+        ->get();
+        */
+            return view('answers.index', ['mytest' =>  $questions]); 
+    }
+/**}
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+        $qlist= Questions::all();
+        return view('answers.create',['questions'=>$qlist]);
+    }
+   
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {   
+        
+        $qid=$request->q_id;
+        $anslist=$request->answer;
+        $statuslist=$request->mystatus;
+        //$condition = $input['q_id'];
+        $answers=array();
+        
+        foreach($anslist as $ans)
+        {
+            $arrData = array( 
+                'q_id'    => $qid,
+                'answers'  => $ans
+               );
+                //$answers->push($arrData);
+                array_push($answers, $arrData);
+        }
+        DB::table('answers')->insert( $answers);
+    }
+       
+
+
+        // print_r($anslist);
+        // print_r($statuslist);
+      /*  $answer = new Answers();
+        $answer->q_id= $request->q_id;
+        $answer->answers = $request->answer;
+        $answer->status = $request->mystatus;
+            
+            $answer->save();
+         */
+
+    
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Task  $task
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $question = Questions::find($id);
+        return view('questions.show')->withTask($question);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Task  $task
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+        $question = Questions::find($id);
+        //echo "Task Name ".$task->name;
+        return view('questions.edit',['questions'=>Questions::get(),'questionlist'=> $question]);
+
+       // return view('task.create');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Task  $task
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request,$id)
+    {
+        //
+
+        $q = Questions::find($id);
+        $q->questionname = $request->qname;
+        $q->questionmark= $request->qmark;
+        echo'task name'.$q->questionname. 'id =>'.$id;
+        $q->save();
+       // return response($t);
+        return redirect()->action('QuestionController@index');
+    }
+
+   
+    public function destroy(Questions $question)
+    {
+        Questions::findOrFail($question->id)->delete();
+
+    return redirect()->action('QuestionController@index');
+    }
+}
